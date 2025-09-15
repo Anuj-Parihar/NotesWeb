@@ -1,22 +1,14 @@
-// backend/api/index.js
-require('dotenv').config();
-const serverless = require('serverless-http');
-const app = require('../server'); // your exported express app
+// api/index.js
+const app = require('../server'); // this is your Express app
 const { connectDB } = require('../utils/db');
 
-let connected = false;
-
-async function ensureDB() {
-  if (!connected) {
+// Ensure DB is connected before handling requests
+module.exports = async (req, res) => {
+  try {
     await connectDB();
-    connected = true;
+    return app(req, res); // let Express handle it
+  } catch (err) {
+    console.error('API error:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
   }
-}
-
-// start DB connection on cold start (errors are logged)
-ensureDB().catch(err => {
-  console.error('DB connection failed (api/index.js)', err);
-});
-
-// Export the serverless wrapper for Vercel
-module.exports = serverless(app);
+};
